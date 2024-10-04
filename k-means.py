@@ -2,7 +2,42 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import math
-import random
+import numpy as np
+from sklearn.datasets import load_wine
+from sklearn.cluster import KMeans
+
+def elbow_method(data, max_clusters=10):
+    """
+    
+    El método del codo consiste en encontrar el número de clústeres para K-means. 
+    
+    Este método se basa en identificar el número de clústeres para el que se observa
+    un cambio significativo en la tasa de disminución de la varianza intracluster.
+
+    Para ello se ejecuta k-means con diferentes números de clústeres y se calcula la 
+    suma de las distancias al cuadrado para cada punto con respecto a su centroide.
+    Usando los resultados para crear una gráfica con los valores de k en el eje x y 
+    la suma de las distancias al cuadrado en el eje y. En esta gráfica se busca el punto
+    donde se produce un cambio brusco en la disminución de la suma de las distancias al
+    cuadrado.
+
+    """
+    sum_of_squared_distances = []
+    for k in range(1, max_clusters+1):
+        kmeans = KMeans(n_clusters=k)
+        kmeans.fit(data)
+        sum_of_squared_distances.append(kmeans.inertia_)
+    
+    plt.plot(range(1, max_clusters+1), sum_of_squared_distances, 'bx-')
+    plt.xlabel('Número de Clusters (k)')
+    plt.ylabel('Suma de las Distancias al Cuadrado')
+    plt.title('Curva del Codo')
+    plt.show()
+
+def set_graphic_info():
+    plt.xlabel('Alcohol')
+    plt.ylabel('Magnesium')
+    plt.title('Scatter plot of Alcohol vs Magnesium')
 
 class Point:
     def __init__(self, coordinates) -> None:
@@ -39,26 +74,28 @@ COLORS = ['red','blue','green','yellow','black','white','cyan','magenta','orange
 
 
 def pick_color():
-    return COLORS.pop()
+    return COLORS.pop(0)
 
 def min_distances(point: Point, centroids: list[Centroid]):
     distances = []
     for i in range(len(centroids)):
-        distances[i] = 0
-    for i in range(len(centroids)):
-        distances[i] = point.distance_to(centroids[i].position)
+        distances.append(point.distance_to(centroids[i].position))
     return distances
 
 def k_means(k, points: list[Point]):
     centroids: list[Centroid] = []
-    centroids_position = random.random((k,2))
+    x_positions = 10 + 8 * np.random.rand(k)  # x en el rango [10, 18]
+    y_positions = 60 + 120 * np.random.rand(k)  # y en el rango [60, 180]
+    centroids_position = np.column_stack((x_positions, y_positions))
+
     for position in centroids_position:
         color = pick_color()
         centroid = Centroid(position, color)
         centroids.append(centroid)
         plt.scatter(centroid.position[0], centroid.position[1], c=centroid.color, marker='x')
 
-    for _ in range(2):
+    for _ in range(12):
+        plt.clf()
         for point in points:
             distances = min_distances(point, centroids)
             
@@ -67,31 +104,31 @@ def k_means(k, points: list[Point]):
             point.centroid = closest_centroid
             centroids[min_index].addPoint(point)
             plt.scatter(point.position[0], point.position[1], c=point.centroid.color)
-        plt.show()
-        plt.clf()
+        
         for centroid in centroids:
             centroid.recenter()
             plt.scatter(centroid.position[0], centroid.position[1], c=centroid.color, marker='x')
-    plt.show()
-    plt.clf()
         
-np.random.seed(7)
+        set_graphic_info()
+        plt.show()
 
-x1 = np.random.standard_normal((100,2))*0.6+np.ones((100,2))
-x2 = np.random.standard_normal((100,2))*0.5-np.ones((100,2))
-x3 = np.random.standard_normal((100,2))*0.4-2*np.ones((100,2))+5
-X = np.concatenate((x1,x2,x3),axis=0)
+wine = load_wine()
 
-points = []
+data = pd.DataFrame(data=np.c_[wine['data'], wine['target']], columns=wine['feature_names']+['target'])
 
-for coordinates in X:
-    points.append(Point(coordinates))
+elbow_method(data, 10)
 
+df = data[['alcohol', 'magnesium']]
 
-plt.plot(X[:,0],X[:,1],'k.')
+plt.scatter(df['alcohol'], df['magnesium'], c='k', marker='.')
+set_graphic_info()
 plt.show()
 
-k_means(3, points)
+wine_data = []
+
+[wine_data.append(Point([float(coordinates['alcohol']), float(coordinates['magnesium'])])) for coordinates in df.iloc]
+
+k_means(3, wine_data)
 
 
 
