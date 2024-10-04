@@ -1,13 +1,8 @@
-import numpy as np
 import pandas as pd
 import seaborn as sns
-from sklearn.datasets import load_wine
 import matplotlib.pyplot as plt
-
-class Centroid:
-    def __init__(self, position, color) -> None:
-        self.position = position
-        self.color = color
+import math
+import random
 
 class Point:
     def __init__(self, coordinates) -> None:
@@ -18,39 +13,67 @@ class Point:
         distance = 0
         for i in range(len(self.position)):
             distance = (self.position[i] - coordinates[i]) ** 2 + distance
-        return np.sqrt(distance)
+        return math.sqrt(distance)
         
+class Centroid:
+    def __init__(self, position, color) -> None:
+        self.position = position
+        self.color = color
+        self.points: list[Point] = []
+
+    def recenter(self):
+        new_position = [0, 0]
+        for point in self.points:
+            new_position[0] += point.position[0]
+            new_position[1] += point.position[1]
+        new_position[0] = new_position[0] / len(self.points)
+        new_position[1] = new_position[1] / len(self.points)
+        self.position = new_position
+    
+    def addPoint(self, point: Point):
+        self.points.append(point)
+
+
+
 COLORS = ['red','blue','green','yellow','black','white','cyan','magenta','orange','purple','brown','pink','gray','olive','lime']
 
-def show_figure():
-    plt.show()
-    plt.clf()
 
 def pick_color():
     return COLORS.pop()
 
-def min_distance(point: Point, centroids: list[Centroid]):
-    distances = np.zeros(len(centroids))
+def min_distances(point: Point, centroids: list[Centroid]):
+    distances = []
+    for i in range(len(centroids)):
+        distances[i] = 0
     for i in range(len(centroids)):
         distances[i] = point.distance_to(centroids[i].position)
     return distances
 
-def k_means(k, points):
-    centroids = []
-    centroids_position = np.random.standard_normal((k,2))
+def k_means(k, points: list[Point]):
+    centroids: list[Centroid] = []
+    centroids_position = random.random((k,2))
     for position in centroids_position:
         color = pick_color()
         centroid = Centroid(position, color)
         centroids.append(centroid)
         plt.scatter(centroid.position[0], centroid.position[1], c=centroid.color, marker='x')
 
-
-    for point in points:
-        distances = min_distance(point, centroids)
-        min_index = np.argmin(distances)
-        closest_centroid = centroids[min_index]
-        point.centroid = closest_centroid
-        plt.scatter(point.position[0], point.position[1], c=point.centroid.color)
+    for _ in range(2):
+        for point in points:
+            distances = min_distances(point, centroids)
+            
+            min_index = np.argmin(distances)
+            closest_centroid = centroids[min_index]
+            point.centroid = closest_centroid
+            centroids[min_index].addPoint(point)
+            plt.scatter(point.position[0], point.position[1], c=point.centroid.color)
+        plt.show()
+        plt.clf()
+        for centroid in centroids:
+            centroid.recenter()
+            plt.scatter(centroid.position[0], centroid.position[1], c=centroid.color, marker='x')
+    plt.show()
+    plt.clf()
         
 np.random.seed(7)
 
@@ -66,10 +89,9 @@ for coordinates in X:
 
 
 plt.plot(X[:,0],X[:,1],'k.')
-show_figure()
+plt.show()
 
 k_means(3, points)
-show_figure()
 
 
 
