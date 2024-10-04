@@ -129,9 +129,3 @@ wine_data = []
 [wine_data.append(Point([float(coordinates['alcohol']), float(coordinates['magnesium'])])) for coordinates in df.iloc]
 
 k_means(3, wine_data)
-
-
-
-
-
-    
