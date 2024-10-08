@@ -3,7 +3,35 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-def regression_by_min_square_errors(x: list[float], y: list[float]):
+def lineal_regression_by_gradient_descend(x: list[float], y: list[float], learning_rate: float = 0.5, iterations: int = 1000):
+    #Inicializamos los parámetros
+    m = 0
+    b = 0
+    n = len(x)
+
+    for _ in range(iterations):
+        y_pred = [m * xi + b for xi in x]
+        errors = [y_pred[i] - y[i] for i in range(n)]
+
+        print(errors)
+
+        square_error = (sum([ei ** 2 for ei in errors])) / (2 * n)
+
+        if (square_error < 0.001):
+            return m, b
+
+        # Calculamos el gradiente
+        dm = (-1/ (2 * n)) * sum(x[i] * errors[i] for i in range(n))
+        db = (-1/ (2 * n)) * sum(errors)
+
+        #Actualizamos el valor de m y b mediante el factor de aprendizaje y las derivadas parciales
+        m = m - learning_rate * dm
+        b = b - learning_rate * db
+    
+    return m, b
+
+
+def lineal_regression_by_min_square_errors(x: list[float], y: list[float]):
     k1 = 0
     k2 = 0
     k3 = 0
@@ -39,7 +67,7 @@ plt.title('Scatter Plot de Weight vs Height para la especie Bream')
 
 plt.show()
 
-m, b = regression_by_min_square_errors(X, Y)
+m, b = lineal_regression_by_min_square_errors(X, Y)
 
 print(f'm ={m}')
 print(f'b ={b}')
@@ -56,3 +84,9 @@ plt.ylabel('Y')
 plt.title('Regresión Lineal por Mínimos Cuadrados')
 plt.legend()
 plt.show()
+
+
+m, b = lineal_regression_by_gradient_descend(X, Y)
+
+print(f'm ={m}')
+print(f'b ={b}')
