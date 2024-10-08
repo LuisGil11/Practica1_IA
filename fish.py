@@ -3,8 +3,8 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-def lineal_regression_by_gradient_descend(x: list[float], y: list[float], learning_rate: float = 0.5, iterations: int = 1000):
-    #Inicializamos los parámetros
+def lineal_regression_by_gradient_descend(x: list[float], y: list[float], learning_rate: float = 0.000001, iterations: int = 1000):
+    # Inicializamos los parámetros
     m = 0
     b = 0
     n = len(x)
@@ -13,21 +13,24 @@ def lineal_regression_by_gradient_descend(x: list[float], y: list[float], learni
         y_pred = [m * xi + b for xi in x]
         errors = [y_pred[i] - y[i] for i in range(n)]
 
-        print(errors)
+        # Calcular el error cuadrático medio
+        square_error = sum([ei ** 2 for ei in errors]) / (2 * n)
 
-        square_error = (sum([ei ** 2 for ei in errors])) / (2 * n)
+        # Calcular los gradientes
+        dm = (2/n) * sum(x[i] * errors[i] for i in range(n))
+        db = (2/n) * sum(errors)
 
-        if (square_error < 0.001):
-            return m, b
+        # Actualizar los parámetros
+        m -= learning_rate * dm
+        b -= learning_rate * db
 
-        # Calculamos el gradiente
-        dm = (-1/ (2 * n)) * sum(x[i] * errors[i] for i in range(n))
-        db = (-1/ (2 * n)) * sum(errors)
+        print(f'm = {m}')
+        print(f'b = {b}')
 
-        #Actualizamos el valor de m y b mediante el factor de aprendizaje y las derivadas parciales
-        m = m - learning_rate * dm
-        b = b - learning_rate * db
-    
+        # Condición de parada basada en el error cuadrático medio
+        if square_error < 0.001:
+            break
+
     return m, b
 
 
