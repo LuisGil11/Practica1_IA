@@ -32,7 +32,7 @@ X = data['Weight'].tolist()
 Y = data['Height'].tolist()
 
 # Paso 4: Graficar los datos
-plt.scatter(X, Y)
+plt.scatter(X, Y, color='blue', label='Datos originales')
 plt.xlabel('Weight')
 plt.ylabel('Height')
 plt.title('Scatter Plot de Weight vs Height para la especie Bream')
