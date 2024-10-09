@@ -2,8 +2,38 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import random
 
-def lineal_regression_by_gradient_descend(x: list[float], y: list[float], learning_rate: float = 0.000001, iterations: int = 1000):
+def stochastic_gradient_descent(x: list[float], y: list[float], learning_rate: float = 0.001, iterations: int = 1000):
+    # Inicializamos los parámetros
+    m = 0
+    b = 0
+    n = len(x)
+
+    for _ in range(iterations):
+        i = random.randint(0, n - 1)
+        xi = x[i]
+        yi = y[i]
+        y_pred = xi * m + b
+        error = yi - y_pred
+
+        # Calcular los gradientes, no dividimos por n ya que estamos tomando un solo punto
+        dm = - 2 * xi * error
+        db = - 2 * error
+
+        m -= learning_rate * dm
+        b -= learning_rate * db
+
+        # Calcular el error cuadrático medio (MSE)
+        y_preds = [m * xj + b for xj in x]
+        square_error = sum((yj - y_predj) ** 2 for yj, y_predj in zip(y, y_preds)) / n
+
+        if square_error < 0.001:
+            break
+
+    return m, b
+
+def lineal_regression_by_gradient_descend(x: list[float], y: list[float], learning_rate: float = 0.001, iterations: int = 1000):
     # Inicializamos los parámetros
     m = 0
     b = 0
@@ -23,9 +53,6 @@ def lineal_regression_by_gradient_descend(x: list[float], y: list[float], learni
         # Actualizar los parámetros
         m -= learning_rate * dm
         b -= learning_rate * db
-
-        print(f'm = {m}')
-        print(f'b = {b}')
 
         # Condición de parada basada en el error cuadrático medio
         if square_error < 0.001:
@@ -72,8 +99,8 @@ plt.show()
 
 m, b = lineal_regression_by_min_square_errors(X, Y)
 
-print(f'm ={m}')
-print(f'b ={b}')
+print(f'm = {m}')
+print(f'b = {b}')
 
 # Generar puntos para la recta
 x_range = np.linspace(min(X), max(X), 100)
@@ -90,6 +117,11 @@ plt.show()
 
 
 m, b = lineal_regression_by_gradient_descend(X, Y)
+
+print(f'm ={m}')
+print(f'b ={b}')
+
+m, b = stochastic_gradient_descent(X, Y)
 
 print(f'm ={m}')
 print(f'b ={b}')
