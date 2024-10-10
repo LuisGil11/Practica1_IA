@@ -50,8 +50,8 @@ def gradient_descend(x: list[float], y: list[float], learning_rate: float = 0.00
         y_pred = m * x + b
 
         # Paso 1. Calculamos las derivadas parciales para obtener el gradiente
-        dm = (-1 / n) * sum((y - y_pred) * x)
-        db = (-1 / n) * sum(y - y_pred)
+        dm = (-1 / 2* n) * sum((y - y_pred) * x)
+        db = (-1 / 2* n) * sum(y - y_pred)
 
         print(f'dm = {dm}, db = {db}')
 
