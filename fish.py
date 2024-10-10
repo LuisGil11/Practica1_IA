@@ -14,11 +14,15 @@ def normalize(data: list[float]) -> list[float]:
 def squared_error(y: list[float], y_pred: list[float]) -> float:
     return sum((yi - y_predi) ** 2 for yi, y_predi in zip(y, y_pred)) / (2 * len(y))
 
-def stochastic_gradient_descent(x: list[float], y: list[float], learning_rate: float = 0.001, iterations: int = 1000):
+def stochastic_gradient_descent(x: list[float], y: list[float], learning_rate: float = 0.001, iterations: int = 1000, tolerance: float = -1):
     # Inicializamos los parámetros
     m = 0
     b = 0
     n = len(x)
+
+    # Normalizamos x e y
+    x, x_mean, x_std = normalize(x)
+    y, y_mean, y_std = normalize(y)
 
     for _ in range(iterations):
         i = random.randint(0, n - 1)
@@ -35,15 +39,21 @@ def stochastic_gradient_descent(x: list[float], y: list[float], learning_rate: f
         b -= learning_rate * db
 
         # Calcular el error cuadrático medio (MSE)
-        y_preds = [m * xj + b for xj in x]
-        square_error = sum((yj - y_predj) ** 2 for yj, y_predj in zip(y, y_preds)) / n
+        y_pred = [m * xj + b for xj in x]
+        mse = squared_error(y, y_pred)
 
-        if square_error < 0.001:
+        if mse < tolerance:
             break
 
-    return m, b
+    # Desnormalizar los parámetros
+    m_desnormalizado = m * (y_std / x_std)
+    b_desnormalizado = b * y_std + y_mean - m_desnormalizado * x_mean
 
-def gradient_descend(x: list[float], y: list[float], learning_rate: float = 0.001, iterations: int = 1000, tolerance: float = 0.001):
+    print(f'Error cuadrático medio: {mse}, despues de {i + 1} iteraciones')
+
+    return m_desnormalizado, b_desnormalizado
+
+def gradient_descend(x: list[float], y: list[float], learning_rate: float = 0.001, iterations: int = 1000, tolerance: float = -1):
     # Inicializamos los parámetros
     m = 0
     b = 0
@@ -76,7 +86,7 @@ def gradient_descend(x: list[float], y: list[float], learning_rate: float = 0.00
     m_desnormalizado = m * (y_std / x_std)
     b_desnormalizado = b * y_std + y_mean - m_desnormalizado * x_mean
 
-    print(f'Error cuadrático medio: {mse}, despues de f{i + 1} iteraciones')
+    print(f'Error cuadrático medio: {mse}, despues de {i + 1} iteraciones')
 
     return m_desnormalizado, b_desnormalizado
 
@@ -136,34 +146,54 @@ m_gd, b_gd = gradient_descend(X, Y, 0.01, 1000, 0.001)
 print(f'm ={m_gd}')
 print(f'b ={b_gd}')
 
-# Graficar los puntos originales y la recta de regresión
+# Graficar los puntos originales y la recta de regresión por descenso de gradiente
 plt.scatter(X, Y, color='blue', label='Datos originales')
-plt.plot(x_range, y_range, color='red', label=f'Recta de regresión por descenso de gradiente: y = {m_gd:.2f}x + {b_gd:.2f}')
+plt.plot(x_range, y_range, color='red', label=f'Recta por DG: y = {m_gd:.2f}x + {b_gd:.2f}')
 plt.xlabel('X')
 plt.ylabel('Y')
 plt.title('Regresión Lineal por Descenso de Gradiente')
 plt.legend()
 plt.show()
 
-# m, b = stochastic_gradient_descent(X, Y)
+m_egd, b_egd = stochastic_gradient_descent(X, Y, 0.001, 1000, 0.001)
 
+# Graficar los puntos originales y la recta de regresión por descenso de gradiente estocástico
+plt.scatter(X, Y, color='blue', label='Datos originales')
+plt.plot(x_range, y_range, color='red', label=f'Recta por DGE: y = {m_egd:.2f}x + {b_egd:.2f}')
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.title('Regresión Lineal por Descenso de Gradiente Estocástico')
+plt.legend()
+plt.show()
 
 # Dividimos la data en data de entrenamiento y data de prueba
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2)
 
-# Obtenemos la pendiente y el punto de corte del modelo a partir de los datos de entrenamiento
-m_min_sq, b_min_sq = lineal_regression_by_min_square_errors(X_train, Y_train)
+# Obtenemos la pendiente y el punto de corte del modelo a partir de los datos de entrenamiento para el modelo de regresión de mínimos cuadrados
+m_trained_mse, b_trained_mse = lineal_regression_by_min_square_errors(X_train, Y_train)
 
-Y_pred_min_sq = m_min_sq * X_test + b_min_sq
+Y_pred_min_sq = m_trained_mse * X_test + b_trained_mse
 
 # Calculamos el error cuadrático medio para el modelo de regresión de mínimos cuadrados
 mse_min_sq = squared_error(Y_test, Y_pred_min_sq)
 print(f'Error cuadrático medio para regresión de mínimos cuadrados: {mse_min_sq}')
 
+# Obtenemos la pendiente y el punto de corte del modelo a partir de los datos de entrenamiento para el modelo de regresión por descenso de gradiente
+m_grad_desc, b_grad_desc = gradient_descend(X_train, Y_train, 0.001, 1000, 0.001)
 
-# m_grad_desc, b_grad_desc = gradient_descend(X_train, Y_train, 0.001, 1000, 0.001)
-# m_est, b_est = stochastic_gradient_descent(X_train, Y_train)
+# Calculamos el error cuadrático medio para el modelo de regresión por descenso de gradiente
+mse_gd = squared_error(Y_test, Y_pred_min_sq)
+print(f'Error cuadrático medio para regresión por descenso de gradiente: {mse_gd}')
 
+# Obtenemos la pendiente y el punto de corte del modelo a partir de los datos de entrenamiento para el modelo de regresión por descenso de gradiente estocástico
+m_est, b_est = stochastic_gradient_descent(X_train, Y_train, 0.001, 1000, 0.001)
+
+# Calculamos el error cuadrático medio para el modelo de regresión por descenso de gradiente estocástico
+mse_sgd = squared_error(Y_test, Y_pred_min_sq)
+print(f'Error cuadrático medio para regresión por descenso de gradiente estocástico: {mse_sgd}')
+
+
+# Utilizamos el modelo de regresión lineal de sklearn
 linear_regression = LinearRegression()
 linear_regression.fit(X_train.values.reshape(-1, 1), Y_train)
 
@@ -172,3 +202,12 @@ Y_pred = linear_regression.predict(X_test.values.reshape(-1, 1))
 # Calculamos el error cuadrático medio para el modelo de regresión lineal de sklearn
 mse = squared_error(Y_test, Y_pred)
 print(f'Error cuadrático medio para regresión lineal de sklearn: {mse}')
+
+data = {
+    'Modelo': ['Mínimos Cuadrados', 'Descenso de Gradiente', 'Descenso de Gradiente Estocástico', 'Sklearn'],
+    'Error Cuadrático Medio': [mse_min_sq, mse_gd, mse_sgd, mse]
+}
+
+df = pd.DataFrame(data)
+
+print(df)
