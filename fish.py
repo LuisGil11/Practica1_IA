@@ -33,29 +33,27 @@ def stochastic_gradient_descent(x: list[float], y: list[float], learning_rate: f
 
     return m, b
 
-def lineal_regression_by_gradient_descend(x: list[float], y: list[float], learning_rate: float = 0.001, iterations: int = 1000):
+def gradient_descend(x: list[float], y: list[float], learning_rate: float = 0.001, iterations: int = 1000, tolerance: float = 0.001):
     # Inicializamos los parámetros
     m = 0
     b = 0
     n = len(x)
 
     for _ in range(iterations):
-        y_pred = [m * xi + b for xi in x]
-        errors = [y_pred[i] - y[i] for i in range(n)]
 
-        # Calcular el error cuadrático medio
-        square_error = sum([ei ** 2 for ei in errors]) / (2 * n)
+        # Paso 1. Calcular los gradientes
+        dm = - (1/2 * n) * sum((y - m * x - b) * x)
+        db = - (1/2 * n) * sum(y - m * x - b)
 
-        # Calcular los gradientes
-        dm = (2/n) * sum(x[i] * errors[i] for i in range(n))
-        db = (2/n) * sum(errors)
-
-        # Actualizar los parámetros
+        # Paso 2. Actualizar los parámetros
         m -= learning_rate * dm
         b -= learning_rate * db
 
-        # Condición de parada basada en el error cuadrático medio
-        if square_error < 0.001:
+        # 3. Calcular el error cuadrático medio
+        square_error = sum((y - m * x - b) ** 2) / (2 * n)
+
+        # 4. Condición de parada basada en el error cuadrático medio
+        if square_error < tolerance:
             break
 
     return m, b
@@ -86,8 +84,8 @@ data = pd.read_csv("./Fish.csv")
 
 data = data[data.Species == "Bream"]
 
-X = data['Weight'].tolist()
-Y = data['Height'].tolist()
+X = data['Weight']
+Y = data['Height']
 
 # Paso 4: Graficar los datos
 plt.scatter(X, Y, color='blue', label='Datos originales')
@@ -116,12 +114,12 @@ plt.legend()
 plt.show()
 
 
-m, b = lineal_regression_by_gradient_descend(X, Y)
+m, b = gradient_descend(X, Y, 1.22e-5, 1000, 0.001)
 
 print(f'm ={m}')
 print(f'b ={b}')
 
-m, b = stochastic_gradient_descent(X, Y)
+# m, b = stochastic_gradient_descent(X, Y)
 
-print(f'm ={m}')
-print(f'b ={b}')
+# print(f'm ={m}')
+# print(f'b ={b}')
