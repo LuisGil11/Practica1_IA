@@ -4,6 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import random
 from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
 
 def squared_error(y: list[float], y_pred: list[float]) -> float:
     n = len(y)
@@ -144,3 +145,11 @@ print(f'Error cuadrático medio para regresión de mínimos cuadrados: {mse_min_
 # m_grad_desc, b_grad_desc = gradient_descend(X_train, Y_train, 0.001, 1000, 0.001)
 # m_est, b_est = stochastic_gradient_descent(X_train, Y_train)
 
+linear_regression = LinearRegression()
+linear_regression.fit(X_train.values.reshape(-1, 1), Y_train)
+
+Y_pred = linear_regression.predict(X_test.values.reshape(-1, 1))
+
+# Calculamos el error cuadrático medio para el modelo de regresión lineal de sklearn
+mse = squared_error(Y_test, Y_pred)
+print(f'Error cuadrático medio para regresión lineal de sklearn: {mse}')
