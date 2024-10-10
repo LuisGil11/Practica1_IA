@@ -6,9 +6,13 @@ import random
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 
+def normalize(data: list[float]) -> list[float]:
+    mean = sum(data) / len(data)
+    std_dev = (sum((x - mean) ** 2 for x in data) / len(data)) ** 0.5
+    return [(x - mean) / std_dev for x in data], mean, std_dev
+
 def squared_error(y: list[float], y_pred: list[float]) -> float:
-    n = len(y)
-    return sum((y - y_pred) ** 2) / (2 * n)
+    return sum((yi - y_predi) ** 2 for yi, y_predi in zip(y, y_pred)) / (2 * len(y))
 
 def stochastic_gradient_descent(x: list[float], y: list[float], learning_rate: float = 0.001, iterations: int = 1000):
     # Inicializamos los parámetros
@@ -45,15 +49,17 @@ def gradient_descend(x: list[float], y: list[float], learning_rate: float = 0.00
     b = 0
     n = len(x)
 
-    for _ in range(iterations):
+    # Normalizamos x e y
+    x, x_mean, x_std = normalize(x)
+    y, y_mean, y_std = normalize(y)
 
-        y_pred = m * x + b
+    for i in range(iterations):
+
+        y_pred = [m * xi + b for xi in x]
 
         # Paso 1. Calculamos las derivadas parciales para obtener el gradiente
-        dm = (-1 / 2* n) * sum((y - y_pred) * x)
-        db = (-1 / 2* n) * sum(y - y_pred)
-
-        print(f'dm = {dm}, db = {db}')
+        dm = (-1 / (2 * n)) * sum((yi - y_predi) * xi for yi, y_predi, xi in zip(y, y_pred, x))
+        db = (-1 / (2 * n)) * sum(yi - y_predi for yi, y_predi in zip(y, y_pred))
 
         # Paso 2. Actualizar los parámetros
         m -= learning_rate * dm
@@ -65,8 +71,14 @@ def gradient_descend(x: list[float], y: list[float], learning_rate: float = 0.00
         # 4. Condición de parada basada en el error cuadrático medio
         if mse < tolerance:
             break
+    
+    # Desnormalizar los parámetros
+    m_desnormalizado = m * (y_std / x_std)
+    b_desnormalizado = b * y_std + y_mean - m_desnormalizado * x_mean
 
-    return m, b
+    print(f'Error cuadrático medio: {mse}, despues de f{i + 1} iteraciones')
+
+    return m_desnormalizado, b_desnormalizado
 
 
 def lineal_regression_by_min_square_errors(x: list[float], y: list[float]):
@@ -101,33 +113,40 @@ plt.title('Scatter Plot de Weight vs Height para la especie Bream')
 
 plt.show()
 
-m, b = lineal_regression_by_min_square_errors(X, Y)
+m_mse, b_mse = lineal_regression_by_min_square_errors(X, Y)
 
-print(f'm = {m}')
-print(f'b = {b}')
+print(f'm = {m_mse}')
+print(f'b = {b_mse}')
 
 # Generar puntos para la recta
 x_range = np.linspace(min(X), max(X), 100)
-y_range = m * x_range + b
+y_range = m_mse * x_range + b_mse
 
 # Graficar los puntos originales y la recta de regresión
 plt.scatter(X, Y, color='blue', label='Datos originales')
-plt.plot(x_range, y_range, color='red', label=f'Recta de regresión: y = {m:.2f}x + {b:.2f}')
+plt.plot(x_range, y_range, color='red', label=f'Recta de regresión: y = {m_mse:.2f}x + {b_mse:.2f}')
 plt.xlabel('X')
 plt.ylabel('Y')
 plt.title('Regresión Lineal por Mínimos Cuadrados')
 plt.legend()
 plt.show()
 
-# m, b = gradient_descend(X, Y, 0.001, 1000, 0.001)
+m_gd, b_gd = gradient_descend(X, Y, 0.01, 1000, 0.001)
 
-# print(f'm ={m}')
-# print(f'b ={b}')
+print(f'm ={m_gd}')
+print(f'b ={b_gd}')
+
+# Graficar los puntos originales y la recta de regresión
+plt.scatter(X, Y, color='blue', label='Datos originales')
+plt.plot(x_range, y_range, color='red', label=f'Recta de regresión por descenso de gradiente: y = {m_gd:.2f}x + {b_gd:.2f}')
+plt.xlabel('X')
+plt.ylabel('Y')
+plt.title('Regresión Lineal por Descenso de Gradiente')
+plt.legend()
+plt.show()
 
 # m, b = stochastic_gradient_descent(X, Y)
 
-# print(f'm ={m}')
-# print(f'b ={b}')
 
 # Dividimos la data en data de entrenamiento y data de prueba
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2)
