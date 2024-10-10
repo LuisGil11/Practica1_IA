@@ -20,11 +20,14 @@ def stochastic_gradient_descent(x: list[float], y: list[float], learning_rate: f
     b = 0
     n = len(x)
 
+
+    print(iterations)
+
     # Normalizamos x e y
     x, x_mean, x_std = normalize(x)
     y, y_mean, y_std = normalize(y)
 
-    for _ in range(iterations):
+    for j in range(iterations):
         i = random.randint(0, n - 1)
         xi = x[i]
         yi = y[i]
@@ -49,9 +52,9 @@ def stochastic_gradient_descent(x: list[float], y: list[float], learning_rate: f
     m_desnormalizado = m * (y_std / x_std)
     b_desnormalizado = b * y_std + y_mean - m_desnormalizado * x_mean
 
-    print(f'Error cuadrático medio: {mse}, despues de {i + 1} iteraciones')
+    print(f'Error cuadrático medio: {mse}, despues de {j + 1} iteraciones')
 
-    return m_desnormalizado, b_desnormalizado
+    return m_desnormalizado, b_desnormalizado, mse, j + 1
 
 def gradient_descend(x: list[float], y: list[float], learning_rate: float = 0.001, iterations: int = 1000, tolerance: float = -1):
     # Inicializamos los parámetros
@@ -88,7 +91,7 @@ def gradient_descend(x: list[float], y: list[float], learning_rate: float = 0.00
 
     print(f'Error cuadrático medio: {mse}, despues de {i + 1} iteraciones')
 
-    return m_desnormalizado, b_desnormalizado
+    return m_desnormalizado, b_desnormalizado, mse, i + 1
 
 
 def lineal_regression_by_min_square_errors(x: list[float], y: list[float]):
@@ -141,7 +144,7 @@ plt.title('Regresión Lineal por Mínimos Cuadrados')
 plt.legend()
 plt.show()
 
-m_gd, b_gd = gradient_descend(X, Y, 0.01, 1000, 0.001)
+m_gd, b_gd, error, iterations = gradient_descend(X, Y, 0.01, 1000, 0.001)
 
 print(f'm ={m_gd}')
 print(f'b ={b_gd}')
@@ -155,7 +158,7 @@ plt.title('Regresión Lineal por Descenso de Gradiente')
 plt.legend()
 plt.show()
 
-m_egd, b_egd = stochastic_gradient_descent(X, Y, 0.001, 1000, 0.001)
+m_egd, b_egd, error, iterations = stochastic_gradient_descent(X, Y, 0.01, 1000, 0.001)
 
 # Graficar los puntos originales y la recta de regresión por descenso de gradiente estocástico
 plt.scatter(X, Y, color='blue', label='Datos originales')
@@ -165,6 +168,11 @@ plt.ylabel('Y')
 plt.title('Regresión Lineal por Descenso de Gradiente Estocástico')
 plt.legend()
 plt.show()
+
+# Dividimos la data en data de entrenamiento y data de prueba
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2)
+
+from sklearn.model_selection import train_test_split
 
 # Dividimos la data en data de entrenamiento y data de prueba
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2)
@@ -179,19 +187,22 @@ mse_min_sq = squared_error(Y_test, Y_pred_min_sq)
 print(f'Error cuadrático medio para regresión de mínimos cuadrados: {mse_min_sq}')
 
 # Obtenemos la pendiente y el punto de corte del modelo a partir de los datos de entrenamiento para el modelo de regresión por descenso de gradiente
-m_grad_desc, b_grad_desc = gradient_descend(X_train, Y_train, 0.001, 1000, 0.001)
+m_grad_desc, b_grad_desc, error, iterations = gradient_descend(X_train, Y_train, 0.01, 1000, 0.001)
+
+Y_pred_grad_desc = m_grad_desc * X_test + b_grad_desc
 
 # Calculamos el error cuadrático medio para el modelo de regresión por descenso de gradiente
-mse_gd = squared_error(Y_test, Y_pred_min_sq)
+mse_gd = squared_error(Y_test, Y_pred_grad_desc)
 print(f'Error cuadrático medio para regresión por descenso de gradiente: {mse_gd}')
 
 # Obtenemos la pendiente y el punto de corte del modelo a partir de los datos de entrenamiento para el modelo de regresión por descenso de gradiente estocástico
-m_est, b_est = stochastic_gradient_descent(X_train, Y_train, 0.001, 1000, 0.001)
+m_est, b_est, error, iterations = stochastic_gradient_descent(X_train, Y_train, 0.01, 1000, 0.001)
+
+Y_pred_est = m_est * X_test + b_est
 
 # Calculamos el error cuadrático medio para el modelo de regresión por descenso de gradiente estocástico
-mse_sgd = squared_error(Y_test, Y_pred_min_sq)
+mse_sgd = squared_error(Y_test, Y_pred_est)
 print(f'Error cuadrático medio para regresión por descenso de gradiente estocástico: {mse_sgd}')
-
 
 # Utilizamos el modelo de regresión lineal de sklearn
 linear_regression = LinearRegression()
@@ -210,4 +221,15 @@ data = {
 
 df = pd.DataFrame(data)
 
+print(df)
+
+# Buscamos un learning rate optimo
+learning_rates = [1, 0.1, 0.01, 0.001, 0.0001]
+results = []
+
+for lr in learning_rates:
+    m, b, error, iterations = gradient_descend(X_train, Y_train, lr, 1000, 0.001)
+    results.append({'Learning Rate': lr, 'Error': error, 'Iterations': iterations})
+
+df = pd.DataFrame(results)
 print(df)
